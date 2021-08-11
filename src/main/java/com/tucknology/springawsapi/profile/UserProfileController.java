@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("api/v1/user-profile")
+@CrossOrigin("*") // very insecure, change after local tests
 public class UserProfileController {
 
     private final UserProfileService userProfileService;
