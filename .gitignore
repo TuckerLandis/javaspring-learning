@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### AmznCONFIG ###
+src/main/java/com/tucknology/springawsapi/config/AmazonConfig.java
+
+###Pkg lock###
+
+src/main/frontend/package-lock.json
