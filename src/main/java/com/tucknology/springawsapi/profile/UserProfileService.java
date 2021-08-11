@@ -30,31 +30,16 @@ public class UserProfileService {
 
     void uploadUserProfileImage(UUID userProfileId, MultipartFile file) {
         //1. check if image is not empty...
-        if (file.isEmpty()) {
-            throw new IllegalStateException("Cannot upload empty file" + file.getSize());
-        }
+        isFileEmpty(file);
         //2. ...if file is image...
-        if (!Arrays.asList(IMAGE_JPEG, IMAGE_PNG, IMAGE_GIF).contains(file.getContentType())){
-            throw new IllegalStateException(("This file is not a supported image type"));
-        }
+        isImage(file);
         //3.... user exists...
-        UserProfile user = userProfileDataAccessService
-                .getUserProfiles()
-                .stream()// creating a stream to filter, need to research this
-                .filter(userProfile -> userProfile.getUserProfileId().equals(userProfileId))
-                .findFirst().
-                orElseThrow(() -> new IllegalStateException((String.format("User profile %s not found", userProfileId))));
-
+        UserProfile user = getUserProfileOrThrow(userProfileId);
         //4. grab metadata
-        Map<String, String> metadata = new HashMap<>();
-        metadata.put("Content-Type", file.getContentType());
-        metadata.put("Content-Length", String.valueOf(file.getSize()));
-
+        Map<String, String> metadata = extractMetadata(file);
         //5. store image in s3, then update database (userProfileImageLink)
-
         String path = String.format("%s/%s", BucketName.PROFILE_IMAGE.getBucketName(), user.getUserProfileId());
         String filename = String.format("%s-%s", file.getName(), UUID.randomUUID());
-
         try {
             fileStore.save(path, filename, Optional.of(metadata), file.getInputStream());
         } catch (IOException e) {
@@ -62,5 +47,36 @@ public class UserProfileService {
         }
 
 
+    }
+
+    private Map<String, String> extractMetadata(MultipartFile file) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("Content-Type", file.getContentType());
+        metadata.put("Content-Length", String.valueOf(file.getSize()));
+        return metadata;
+    }
+
+    private UserProfile getUserProfileOrThrow(UUID userProfileId) {
+        return userProfileDataAccessService
+                .getUserProfiles()
+                .stream()// creating a stream to filter, need to research this
+                .filter(userProfile -> userProfile.getUserProfileId().equals(userProfileId))
+                .findFirst().
+                orElseThrow(() -> new IllegalStateException((String.format("User profile %s not found", userProfileId))));
+    }
+
+    private void isImage(MultipartFile file) {
+        if (!Arrays.asList(
+                IMAGE_JPEG.getMimeType(),
+                IMAGE_PNG.getMimeType(),
+                IMAGE_GIF.getMimeType()).contains(file.getContentType())){
+            throw new IllegalStateException(("This file is not a supported image type" + file.getContentType()));
+        }
+    }
+
+    private void isFileEmpty(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new IllegalStateException("Cannot upload empty file" + file.getSize());
+        }
     }
 }
