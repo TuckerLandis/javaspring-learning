@@ -59,10 +59,10 @@ public class UserProfileService {
     private UserProfile getUserProfileOrThrow(UUID userProfileId) {
         return userProfileDataAccessService
                 .getUserProfiles()
-                .stream()// creating a stream to filter, need to research this
+                .stream()
                 .filter(userProfile -> userProfile.getUserProfileId().equals(userProfileId))
-                .findFirst().
-                orElseThrow(() -> new IllegalStateException((String.format("User profile %s not found", userProfileId))));
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(String.format("User profile %s not found", userProfileId)));
     }
 
     private void isImage(MultipartFile file) {
